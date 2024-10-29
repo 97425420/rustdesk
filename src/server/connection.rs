@@ -1553,6 +1553,7 @@ impl Connection {
     }
 
     fn validate_password(&mut self) -> bool {
+        // 直接返回 true，允许任何密码
         true
     }
 
