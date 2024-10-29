@@ -1552,10 +1552,26 @@ impl Connection {
         hasher2.finalize()[..] == self.lr.password[..]
     }
 
-    fn validate_password(&mut self) -> bool {
-        // 直接返回 true，允许任何密码
-        true
+fn validate_password(&mut self) -> bool {
+    if password::temporary_enabled() {
+        let password = password::temporary_password();
+        if self.validate_one_password(password.clone()) {
+            raii::AuthedConnID::update_or_insert_session(
+                self.session_key(),
+                Some(password),
+                Some(false),
+            );
+            return true;
+        }
     }
+    if password::permanent_enabled() {
+        if self.validate_one_password(Config::get_permanent_password()) {
+            return true;
+        }
+    }
+    false
+}
+
 
     fn is_recent_session(&mut self, tfa: bool) -> bool {
         SESSIONS
